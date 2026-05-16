@@ -1,0 +1,31 @@
+services:
+  backend:
+    build: ./backend
+    container_name: threads_backend
+    environment:
+      - DATABASE_URL=sqlite:////data/threads.db
+      - SECRET_KEY=${SECRET_KEY:-please-change-me-in-production}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+    volumes:
+      - threads_data:/data
+    restart: unless-stopped
+    # Expose backend internally; the frontend nginx proxies /api to it.
+    # If you need to hit the API directly from outside, uncomment:
+    # ports:
+    #   - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Leave empty so the built JS uses same-origin /api, which nginx proxies.
+        VITE_API_BASE: ""
+    container_name: threads_frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+volumes:
+  threads_data:
